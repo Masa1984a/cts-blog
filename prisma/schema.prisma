@@ -1,0 +1,46 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id           String     @id @default(uuid())
+  content_ja   String     @db.Text
+  content_en   String?    @db.Text
+  content_es   String?    @db.Text
+  content_pt   String?    @db.Text
+  content_ko   String?    @db.Text
+  content_zh   String?    @db.Text
+  content_tw   String?    @db.Text
+  content_th   String?    @db.Text
+  image_url    String?    @db.Text
+  status       PostStatus @default(DRAFT)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  published_at DateTime?
+  deleted_at   DateTime?
+
+  @@index([status, published_at])
+  @@index([deleted_at])
+  @@map("posts")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("users")
+}
