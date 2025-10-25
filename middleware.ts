@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth } from './lib/auth';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -11,10 +10,10 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Check authentication
-    const user = verifyAuth(request);
+    // Simple cookie check (JWT verification happens in API routes)
+    const authToken = request.cookies.get('auth-token');
 
-    if (!user) {
+    if (!authToken) {
       // Redirect to login
       const loginUrl = new URL('/admin/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
