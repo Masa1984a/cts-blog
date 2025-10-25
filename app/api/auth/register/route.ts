@@ -6,12 +6,30 @@ import { z } from 'zod';
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  registrationSecret: z.string(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = registerSchema.parse(body);
+    const { email, password, registrationSecret } = registerSchema.parse(body);
+
+    // Verify registration secret
+    const expectedSecret = process.env.REGISTRATION_SECRET;
+
+    if (!expectedSecret) {
+      return NextResponse.json(
+        { error: 'Registration is not configured on this server' },
+        { status: 500 }
+      );
+    }
+
+    if (registrationSecret !== expectedSecret) {
+      return NextResponse.json(
+        { error: 'Invalid registration secret' },
+        { status: 403 }
+      );
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
