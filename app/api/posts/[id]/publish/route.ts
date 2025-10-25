@@ -8,7 +8,7 @@ export const maxDuration = 300; // 5 minutes for translations
 // POST /api/posts/[id]/publish - Publish post with translations
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -17,9 +17,12 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Await params
+    const { id } = await params;
+
     // Get post
     const post = await prisma.post.findUnique({
-      where: { id: params.id, deleted_at: null },
+      where: { id, deleted_at: null },
     });
 
     if (!post) {
@@ -27,12 +30,12 @@ export async function POST(
     }
 
     // Start translations
-    console.log(`Starting translations for post ${params.id}`);
+    console.log(`Starting translations for post ${id}`);
     const translations = await translateToAllLanguages(post.content_ja);
 
     // Update post with translations and publish
     const updatedPost = await prisma.post.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         content_en: translations.en || null,
         content_es: translations.es || null,

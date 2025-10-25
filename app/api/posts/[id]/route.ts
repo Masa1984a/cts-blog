@@ -11,15 +11,16 @@ const updatePostSchema = z.object({
 // GET /api/posts/[id] - Get single post
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { searchParams } = new URL(request.url);
     const lang = searchParams.get('lang') || 'ja';
+    const { id } = await params;
 
     const post = await prisma.post.findUnique({
       where: {
-        id: params.id,
+        id,
         deleted_at: null,
       },
     });
@@ -63,7 +64,7 @@ export async function GET(
 // PUT /api/posts/[id] - Update post
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -72,12 +73,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const data = updatePostSchema.parse(body);
 
     // Check if post exists
     const existingPost = await prisma.post.findUnique({
-      where: { id: params.id, deleted_at: null },
+      where: { id, deleted_at: null },
     });
 
     if (!existingPost) {
@@ -86,7 +88,7 @@ export async function PUT(
 
     // Update post
     const post = await prisma.post.update({
-      where: { id: params.id },
+      where: { id },
       data,
     });
 
@@ -118,7 +120,7 @@ export async function PUT(
 // DELETE /api/posts/[id] - Delete post (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -127,9 +129,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
+
     // Soft delete
     const post = await prisma.post.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         deleted_at: new Date(),
       },
