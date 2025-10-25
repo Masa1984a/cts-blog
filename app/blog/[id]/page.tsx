@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -73,9 +74,9 @@ export default function BlogPostPage({ params }: { params: Promise<{ id: string 
     return (
       <div className="text-center py-12">
         <p className="text-red-500 text-lg">{error || 'Post not found'}</p>
-        <a href="/blog" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+        <Link href="/blog" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
           ← Back to blog
-        </a>
+        </Link>
       </div>
     );
   }
@@ -85,9 +86,9 @@ export default function BlogPostPage({ params }: { params: Promise<{ id: string 
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <a href="/blog" className="text-blue-600 hover:text-blue-800 font-medium">
+          <Link href="/blog" className="text-blue-600 hover:text-blue-800 font-medium">
             ← Back to blog
-          </a>
+          </Link>
           <div className="relative inline-block">
             <select
               value={language}

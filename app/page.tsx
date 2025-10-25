@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function HomePage() {
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -7,18 +9,18 @@ export default function HomePage() {
           Technical articles and insights
         </p>
         <div className="mt-8 space-x-4">
-          <a
+          <Link
             href="/blog"
             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             View Blog
-          </a>
-          <a
+          </Link>
+          <Link
             href="/admin"
             className="inline-block px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
           >
             Admin Panel
-          </a>
+          </Link>
         </div>
       </div>
     </div>
