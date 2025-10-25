@@ -54,7 +54,7 @@ export async function translateBlogPost(params: {
 
   const prompt = `Please translate the following blog post from Japanese to ${languageName}.
 
-## Original content in Japanese:
+"""
 ${content}`;
 
   try {
