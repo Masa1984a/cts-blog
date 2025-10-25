@@ -48,7 +48,8 @@ export async function translateBlogPost(params: {
 - Maintain technical terminology accuracy
 - Keep numbers, dates, and symbols unchanged
 - Translate naturally while preserving the professional and technical tone
-- Do NOT add any explanations or comments
+- Output only the translation result.
+- Do NOT add any explanations or comments such as "Original content in Japanese:"
 - Output ONLY the translated markdown content`;
 
   const prompt = `Please translate the following blog post from Japanese to ${languageName}.
