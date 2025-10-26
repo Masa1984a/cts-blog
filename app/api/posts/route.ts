@@ -46,10 +46,18 @@ export async function GET(request: NextRequest) {
       prisma.post.count({ where }),
     ]);
 
-    // Extract title from first heading in markdown
+    // Extract first few characters from content as preview
     const postsWithTitle = posts.map((post) => {
-      const titleMatch = post.content_ja.match(/^#\s+(.+)$/m);
-      const title = titleMatch ? titleMatch[1] : 'Untitled';
+      // Remove markdown headers and other symbols, then get first ~50 characters
+      const cleanText = post.content_ja
+        .replace(/^#+\s+/gm, '') // Remove markdown headers
+        .replace(/[*_~`]/g, '') // Remove markdown formatting
+        .replace(/\n+/g, ' ') // Replace newlines with spaces
+        .trim();
+
+      const title = cleanText.length > 50
+        ? cleanText.substring(0, 50) + '...'
+        : cleanText || 'Empty post';
 
       return {
         id: post.id,
