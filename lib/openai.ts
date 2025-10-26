@@ -34,8 +34,9 @@ export type LanguageCode = keyof typeof LANGUAGES;
 export async function translateBlogPost(params: {
   content: string;
   targetLanguage: LanguageCode;
+  sourceLanguage?: string;
 }): Promise<TranslationResult> {
-  const { content, targetLanguage } = params;
+  const { content, targetLanguage, sourceLanguage = 'Japanese' } = params;
   const languageName = LANGUAGES[targetLanguage];
 
   const systemPrompt = `You are a professional translator for technical blog content.
@@ -49,10 +50,10 @@ export async function translateBlogPost(params: {
 - Keep numbers, dates, and symbols unchanged
 - Translate naturally while preserving the professional and technical tone
 - Output only the translation result.
-- Do NOT add any explanations or comments such as "Original content in Japanese:"
+- Do NOT add any explanations or comments such as "Original content in Japanese:" or "Original content in English:"
 - Output ONLY the translated markdown content`;
 
-  const prompt = `Please translate the following blog post from Japanese to ${languageName}.
+  const prompt = `Please translate the following blog post from ${sourceLanguage} to ${languageName}.
 
 """
 ${content}`;
@@ -140,28 +141,50 @@ ${content}`;
 }
 
 /**
- * Translate blog post to multiple languages in parallel
+ * Translate blog post to multiple languages using 2-stage translation for better accuracy:
+ * 1. Japanese → English
+ * 2. English → Other languages (es, pt, ko, zh, tw, th)
  */
 export async function translateToAllLanguages(
   content: string
 ): Promise<Record<LanguageCode, string>> {
-  const targetLanguages = Object.keys(LANGUAGES) as LanguageCode[];
+  const translations: Partial<Record<LanguageCode, string>> = {};
+
+  // Stage 1: Translate Japanese → English
+  console.log('Stage 1: Translating Japanese → English');
+  try {
+    const englishResult = await translateBlogPost({
+      content,
+      targetLanguage: 'en',
+      sourceLanguage: 'Japanese',
+    });
+    translations.en = englishResult.content;
+    console.log('✓ English translation completed');
+  } catch (error) {
+    console.error('English translation failed:', error);
+    // If English translation fails, we cannot proceed with other languages
+    throw new Error('Failed to translate to English. Cannot proceed with other languages.');
+  }
+
+  // Stage 2: Translate English → Other languages in parallel
+  const otherLanguages: LanguageCode[] = ['es', 'pt', 'ko', 'zh', 'tw', 'th'];
+  console.log('Stage 2: Translating English → Other languages');
 
   const results = await Promise.allSettled(
-    targetLanguages.map(async (lang) => {
+    otherLanguages.map(async (lang) => {
       const result = await translateBlogPost({
-        content,
+        content: translations.en!,
         targetLanguage: lang,
+        sourceLanguage: 'English',
       });
       return { lang, content: result.content };
     })
   );
 
-  const translations: Partial<Record<LanguageCode, string>> = {};
-
   for (const result of results) {
     if (result.status === 'fulfilled') {
       translations[result.value.lang] = result.value.content;
+      console.log(`✓ ${result.value.lang} translation completed`);
     } else {
       console.error(`Translation failed for language:`, result.reason);
     }
