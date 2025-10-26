@@ -90,7 +90,7 @@ export async function PUT(
     }
 
     // If post is PUBLISHED and content_ja is being updated, re-translate
-    let updateData = { ...data };
+    let updateData: any = { ...data };
     if (existingPost.status === 'PUBLISHED' && data.content_ja) {
       console.log(`Re-translating published post ${id}`);
       const translations = await translateToAllLanguages(data.content_ja);
