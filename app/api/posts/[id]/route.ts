@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAuth } from '@/lib/auth';
 import { z } from 'zod';
+import { translateToAllLanguages } from '@/lib/openai';
+
+export const maxDuration = 300; // 5 minutes for translations
 
 const updatePostSchema = z.object({
   content_ja: z.string().min(1).max(10000).optional(),
@@ -86,10 +89,29 @@ export async function PUT(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
+    // If post is PUBLISHED and content_ja is being updated, re-translate
+    let updateData = { ...data };
+    if (existingPost.status === 'PUBLISHED' && data.content_ja) {
+      console.log(`Re-translating published post ${id}`);
+      const translations = await translateToAllLanguages(data.content_ja);
+
+      updateData = {
+        ...updateData,
+        content_en: translations.en || null,
+        content_es: translations.es || null,
+        content_pt: translations.pt || null,
+        content_ko: translations.ko || null,
+        content_zh: translations.zh || null,
+        content_tw: translations.tw || null,
+        content_th: translations.th || null,
+        published_at: new Date(), // Update published date
+      };
+    }
+
     // Update post
     const post = await prisma.post.update({
       where: { id },
-      data,
+      data: updateData,
     });
 
     return NextResponse.json({

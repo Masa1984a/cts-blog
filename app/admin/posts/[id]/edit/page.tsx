@@ -48,16 +48,16 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     fetchPost();
   }, [resolvedParams.id]);
 
-  // Auto-save every 30 seconds
+  // Auto-save every 30 seconds (only for drafts)
   useEffect(() => {
-    if (loading) return;
+    if (loading || status === 'PUBLISHED') return;
 
     const interval = setInterval(() => {
       handleSave(false);
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [content, imageUrl, loading]);
+  }, [content, imageUrl, loading, status]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,6 +100,13 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
   };
 
   const handleSave = async (showNotification = true) => {
+    // If post is already published, confirm re-translation
+    if (status === 'PUBLISHED' && showNotification) {
+      if (!confirm('This post is already published. Saving will re-translate to all 7 languages. Continue?')) {
+        return;
+      }
+    }
+
     setSaving(true);
     setError('');
 
@@ -120,7 +127,9 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
       if (response.ok) {
         setLastSaved(new Date());
         if (showNotification) {
-          alert('Post updated successfully!');
+          alert(status === 'PUBLISHED'
+            ? 'Post updated and re-translated successfully!'
+            : 'Post updated successfully!');
         }
       } else {
         setError(data.error || 'Failed to update post');
@@ -259,7 +268,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         </div>
       </div>
 
-      {publishing && (
+      {(publishing || (saving && status === 'PUBLISHED')) && (
         <div className="mt-4 text-sm text-gray-500">
           <p>Translation in progress... This may take a few minutes.</p>
         </div>
